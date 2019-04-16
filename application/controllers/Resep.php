@@ -26,13 +26,18 @@ class Resep extends CI_Controller
 	public function getPoliklinikData()
 	{
 		$dataPolis['hasil'] = $this->Resep_model->getDataPoliklinik();
-		
 		echo json_encode($dataPolis);
 	}
 
 	public function getResepAll()
 	{
 		$data['hasil'] = $this->Resep_model->getResepAll();
+		echo json_encode($data);
+	}
+
+	public function getStruk()
+	{
+		$data['hasil'] = $this->Resep_model->getStrukData();
 		echo json_encode($data);
 	}
 
@@ -58,6 +63,13 @@ class Resep extends CI_Controller
 
 	}
 
+	public function getDetailForPharmacy()
+	{
+		$data['hasil'] =  $this->Resep_model->getDetailObatForPharmacy();
+		echo json_encode($data);
+
+	}
+	
 	public function getDokterData()
 	{
 		$data['hasil'] = $this->Resep_model->getDataDokter();
@@ -139,6 +151,22 @@ class Resep extends CI_Controller
 	{
 		$dokterID = $this->input->post('dokter_id');
 		$data['hasil'] = $this->Resep_model->getAntrianByDokterID($dokterID);	
+		$data['response'] = true;
+		echo json_encode($data);
+	}
+	
+	public function getAntrianByPasienID()
+	{
+		$pasienID = $this->input->post('pasien_id');
+		$data['hasil'] = $this->Resep_model->getAntrianByPasienID($pasienID);	
+		$data['response'] = true;
+		echo json_encode($data);
+	}
+
+	public function getResepByDokterID()
+	{
+		$dokterID = $this->input->post('dokter_id');
+		$data['hasil'] = $this->Resep_model->getResepByDokterID($dokterID);	
 		$data['response'] = true;
 		echo json_encode($data);
 	}

@@ -37,9 +37,55 @@ class Resep_model extends CI_Model {
 		->join('tb_detail', 'tb_detail_obat.detail_id = tb_detail.detail_id')
 		->where($where)
 		->get()
+		->result();	
+	}
+
+	function getDetailObatForPharmacy() {
+		return $this->db->select('
+			tb_detail_obat.detail_obat_id, 
+			tb_resep.resep_text,
+			tb_obat.nama_obat,
+			tb_detail_obat.dosis_obat,
+			tb_detail_obat.harga_obat,
+			tb_detail.total_harga,
+			tb_resep.resep_status
+			')
+		->from('tb_detail_obat')
+		->join('tb_detail', 'tb_detail_obat.detail_id = tb_detail.detail_id')
+		->join('tb_resep', 'tb_detail_obat.resep_id = tb_resep.resep_id')
+		->join('tb_obat', 'tb_detail_obat.id_obat = tb_obat.id_obat')
+		->get()
 		->result();
 	}
 
+	function getStrukData() {
+		return $this->db->select('
+			tb_detail_obat.detail_obat_id, 
+			tb_pembayaran.pembayaran_date,
+			tb_pasien.pasien_name,
+			tb_dokter.dokter_name,
+			tb_poliklinik.poliklinik_name,
+			tb_resep.resep_text,
+			tb_obat.nama_obat,
+			tb_detail_obat.dosis_obat,
+			tb_detail_obat.harga_obat,
+			tb_detail.total_harga,
+			tb_dokter.dokter_tarif,
+			tb_pembayaran.uang_pembayaran,
+			tb_pembayaran.kembalian_pembayaran,
+			tb_resep.resep_status
+			')
+		->from('tb_detail_obat')
+		->join('tb_detail', 'tb_detail_obat.detail_id = tb_detail.detail_id')
+		->join('tb_resep', 'tb_detail_obat.resep_id = tb_resep.resep_id')
+		->join('tb_obat', 'tb_detail_obat.id_obat = tb_obat.id_obat')
+		->join('tb_pembayaran', 'tb_detail_obat.detail_obat_id = tb_pembayaran.pembayaran_id')
+		->join('tb_pasien', 'tb_pembayaran.pasien_id = tb_pasien.pasien_id')
+		->join('tb_dokter', 'tb_resep.dokter_id = tb_dokter.dokter_id')
+		->join('tb_poliklinik', 'tb_dokter.poliklinik_id = tb_poliklinik.poliklinik_id')
+		->get()
+		->result();
+	}
 	public function getResepAll()
 	{
 		$where = array(
@@ -93,7 +139,7 @@ class Resep_model extends CI_Model {
 		->get()
 		->result();
 	}
-	
+
 	function getDokterComplete($dokter_id) {
 		$where = array('id_user' => $dokter_id);
 		return $this->db->select('
@@ -116,7 +162,7 @@ class Resep_model extends CI_Model {
 		->get()
 		->result();
 	}
-	
+
 	function getAntrian()
 	{
 		$where = array('tb_antrian.status_antrian' => 0);
@@ -214,7 +260,7 @@ class Resep_model extends CI_Model {
 		->get()
 		->result();
 	}
-	
+
 	function getPasienCompleteCheck($pasien_id) {
 		$where = array('id_user' => $pasien_id);
 		return $this->db->select('
@@ -234,7 +280,31 @@ class Resep_model extends CI_Model {
 		->where($where)
 		->get();
 	}
-	
+
+	function getAntrianByPasienID($pasien_id) {
+		$where = array(
+			'tb_antrian.pasien_id' => $pasien_id
+		);
+		return $this->db->select('
+			tb_antrian.antrian_id, 
+			tb_antrian.tanggal_antrian,
+			tb_antrian.dokter_id,
+			tb_dokter.dokter_name,	
+			tb_antrian.pasien_id,
+			tb_pasien.pasien_name,
+			tb_poliklinik.poliklinik_name,
+			tb_antrian.keterangan,
+			tb_antrian.status_antrian
+			')
+		->from('tb_antrian')
+		->join('tb_dokter', 'tb_dokter.dokter_id = tb_antrian.dokter_id')
+		->join('tb_pasien', 'tb_pasien.pasien_id = tb_antrian.pasien_id')
+		->join('tb_poliklinik', 'tb_poliklinik.poliklinik_id = tb_antrian.poliklinik_id')
+		->where($where)
+		->get()
+		->result();
+	}
+
 	function getDokterByPoliklinikID($poliklinik_id) {
 		$where = array('tb_dokter.poliklinik_id' => $poliklinik_id);
 		return $this->db->select('
@@ -247,7 +317,7 @@ class Resep_model extends CI_Model {
 		->get()
 		->result();
 	}
-	
+
 	function getDokterCompleteCheck($dokter_id) {
 		return $this->db->query("SELECT tb_user.id_user, 
 			tb_user.username, 
@@ -264,29 +334,53 @@ class Resep_model extends CI_Model {
 			JOIN tb_poliklinik ON tb_poliklinik.poliklinik_id = tb_dokter.poliklinik_id 
 			WHERE id_user = '$dokter_id'");
 	}
-	
-	
+
+
 	function getAntrianByDokterID($dokter_id) {
-		return $this->db->query(
-			"SELECT tb_antrian.antrian_id,
+		$where = array(
+			'tb_antrian.status_antrian' => 0,
+			'tb_antrian.dokter_id' => $dokter_id
+		);
+		return $this->db->select('
+			tb_antrian.antrian_id, 
 			tb_antrian.tanggal_antrian,
 			tb_antrian.dokter_id,
-			tb_dokter.dokter_name,
+			tb_dokter.dokter_name,	
 			tb_antrian.pasien_id,
 			tb_pasien.pasien_name,
 			tb_poliklinik.poliklinik_name,
 			tb_antrian.keterangan,
 			tb_antrian.status_antrian
-			FROM tb_antrian
-			JOIN tb_dokter ON tb_dokter.dokter_id = tb_antrian.dokter_id
-			JOIN tb_pasien ON tb_pasien.pasien_id = tb_antrian.pasien_id
-			JOIN tb_poliklinik ON tb_poliklinik.poliklinik_id = tb_antrian.poliklinik_id
-			WHERE tb_antrian.status_antrian = '0' 
-			AND tb_antrian.dokter_id = '$dokter_id'
-			"
-		)->result();
+			')
+		->from('tb_antrian')
+		->join('tb_dokter', 'tb_dokter.dokter_id = tb_antrian.dokter_id')
+		->join('tb_pasien', 'tb_pasien.pasien_id = tb_antrian.pasien_id')
+		->join('tb_poliklinik', 'tb_poliklinik.poliklinik_id = tb_antrian.poliklinik_id')
+		->where($where)
+		->get()
+		->result();
 	}
-	
+
+	function getResepByDokterID($dokter_id) {
+		$where = array('tb_resep.dokter_id' => $dokter_id);
+		return $this->db->select('
+			tb_resep.resep_id, 
+			tb_resep.dokter_id, 
+			tb_resep.pasien_id, 
+			tb_dokter.dokter_name,
+			tb_pasien.pasien_name,
+			tb_resep.resep_text,
+			tb_resep.resep_date,
+			tb_resep.resep_status
+			')
+		->from('tb_resep')
+		->join('tb_dokter', 'tb_dokter.dokter_id = tb_resep.dokter_id')
+		->join('tb_pasien', 'tb_pasien.pasien_id = tb_resep.pasien_id')
+		->where($where)
+		->get()
+		->result();
+	}
+
 	function loginUser($username, $userpassword) {
 		$where = array(
 			'username' => $username,
@@ -298,7 +392,7 @@ class Resep_model extends CI_Model {
 		->get()
 		->result();
 	}
-	
+
 	function loginCheck($username, $userpassword) {
 		$where = array(
 			'username' => $username,
@@ -381,7 +475,7 @@ class Resep_model extends CI_Model {
 		$this->db->where($where);
 		$this->db->update('tb_antrian',$data);
 	}
-	
+
 	function updateStatusResep($where,$data) {
 		$this->db->where($where);
 		$this->db->update('tb_resep',$data);
@@ -396,7 +490,7 @@ class Resep_model extends CI_Model {
 		$this->db->where('dokter_id', $id_dokter);
 		$this->db->delete('tb_dokter');
 	}
-	
+
 	function deletePasien($id_pasien) {
 		$this->db->where('pasien_id', $id_pasien);
 		$this->db->delete('tb_pasien');
